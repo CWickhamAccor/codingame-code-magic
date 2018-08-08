@@ -1,0 +1,377 @@
+const debug = printErr;
+let actions = [];
+const scale = {
+    1: 2,
+    2: 0.75,
+    3: 2.5,
+    4: 0,
+    5: 2.5,
+    6: 2,
+    7: 2,
+    8: 2,
+    9: 2,
+    10: 0.75,
+    11: 1.5,
+    12: 2,
+    13: 2.5,
+    14: 0,
+    15: 2,
+    16: 0.75,
+    17: 2,
+    18: 2.5,
+    19: 2,
+    20: 0.5,
+    21: 2,
+    22: 1.5,
+    23: 2.5,
+    24: 0.5,
+    25: 0.75,
+    26: 2.5,
+    27: 2,
+    28: 2.5,
+    29: 3,
+    30: 3,
+    31: 0.5,
+    32: 3.5,
+    33: 3,
+    34: 2.5,
+    35: 2,
+    36: 4,
+    37: 3.5,
+    38: 2.5,
+    39: 2.5,
+    40: 3,
+    41: 2.5,
+    42: 2,
+    43: 3,
+    44: 4.5,
+    45: 4,
+    46: 2.5,
+    47: 2.5,
+    48: 3,
+    49: 4.5,
+    50: 3,
+    51: 3.5,
+    52: 3.5,
+    53: 4.5,
+    54: 3.5,
+    55: 2.5,
+    56: 2,
+    57: 0.75,
+    58: 2,
+    59: 1.5,
+    60: 0.75,
+    61: 2,
+    62: 2.5,
+    63: 2.5,
+    64: 2,
+    65: 2.5,
+    66: 2,
+    67: 3.5,
+    68: 2.5,
+    69: 4.5,
+    70: 2.5,
+    71: 1.5,
+    72: 2,
+    73: 2.5,
+    74: 3,
+    75: 2,
+    76: 3,
+    77: 0.75,
+    78: 0.5,
+    79: 0.75,
+    80: 4.5,
+    81: 2,
+    82: 2.5,
+    83: 0,
+    84: 0,
+    85: 2.5,
+    86: 2,
+    87: 2.5,
+    88: 2.5,
+    89: 2,
+    90: 0.75,
+    91: 2,
+    92: 0.5,
+    93: 2.5,
+    94: 2.5,
+    95: 3,
+    96: 2.5,
+    97: 2,
+    98: 2.5,
+    99: 3,
+    100: 2,
+    101: 2.5,
+    102: 2,
+    103: 3,
+    104: 2.5,
+    105: 3,
+    106: 2.5,
+    107: 2,
+    108: 1,
+    109: 1.5,
+    110: 0.75,
+    111: 2,
+    112: 2,
+    113: 0.5,
+    114: 2,
+    115: 2.5,
+    116: 3
+};
+const curve = {
+    0: 0,
+    1: 2,
+    2: 5,
+    3: 5,
+    4: 5,
+    5: 3,
+    6: 3,
+    7: 2,
+    8: 1,
+    9: 1,
+    10: 1,
+    11: 1,
+    12: 1,
+};
+
+
+/****************************************************/
+/*               get data functions                 */
+/****************************************************/
+
+function getPlayers() {
+    const players = [];
+
+    for (let i = 0; i < 2; i++) {
+        const inputs = readline().split(' ');
+        const player = {};
+        ['health', 'mana', 'deck'/*, 'rune'*/].forEach((key, index) => {
+            player[key] = parseInt(inputs[index]);
+        })
+        players.push(player);
+    }
+    return players;
+}
+
+function getCards() {
+    const cards = [];
+    const cardCount = parseInt(readline());
+    for (let i = 0; i < cardCount; i++) {
+        const card = {};
+        const inputs = readline().split(' ');
+
+        ['number', 'id', 'location', 'type', 'ccm', 'power', 'toughness', 'abilities'].forEach((key, index) => {
+            if (key === 'abilities'){
+                card[key] = inputs[index].split('').filter(ability => ability !== '-');
+            } else {
+                card[key] = parseInt(inputs[index]);
+            }
+        })
+        cards.push(card);
+        // var myHealthChange = parseInt(inputs[8]);
+        // var opponentHealthChange = parseInt(inputs[9]);
+        // var cardDraw = parseInt(inputs[10]);
+    }
+    return cards;
+}
+
+function getCard(cards, id){
+    const [card] = cards.filter(_card => _card.id === id);
+    return card;
+}
+
+function splice(cards, id){
+    const index = cards.findIndex(_card => _card.id === id);
+    cards.splice(index, 1);
+}
+
+function printObj(key, object){
+    printErr(`${key} : ${JSON.stringify(object, null, 2)}`);
+}
+
+/****************************************************/
+/*                  actions                         */
+/****************************************************/
+
+function play(card){
+    debug(`[PLAY] ${card.id}`);
+    card.location = 1;
+    actions.push(`SUMMON ${card.id}`);
+}
+
+function attack(card, target, cards){
+    if (target === null) {
+        debug(`[ATTACK] ${card.id} attack face`);
+        actions.push(`ATTACK ${card.id} -1`);
+    } else {
+        debug(`[ATTACK] ${card.id} attack ${target.id}`);
+        actions.push(`ATTACK ${card.id} ${target.id}`);
+
+        // handle creature dying
+        if (card.power >= target.toughness || (card.abilities.includes('L') && !target.abilities.includes('W'))){
+            debug('target is dead');
+            splice(cards, target.id);
+        } else {
+            target.toughness -= card.power;
+        }
+    }
+}
+
+function pick(number){
+    actions.push(`PICK ${number}`)
+}
+
+function pass(){
+    actions.push('PASS');
+}
+
+function act(){
+    print(actions.join(';'));
+}
+
+/****************************************************/
+
+function playGame(phase, player, opponent, cards, opponentHand) {
+    printErr(`Phase : ${phase}`);
+    if (phase === 'draft'){
+        draft(player, cards);
+    }
+    if (phase === 'game'){
+        game(player, opponent, cards, opponentHand);
+    }
+    act();
+}
+
+/****************************************************/
+/*                  draft                           */
+/****************************************************/
+
+function draft(player, cards) {
+    printObj('player', player);
+    printObj('cards', cards);
+    cards = cards.map((card, index) => {
+        card.draftId = index;
+        return card;
+    });
+
+    cards.forEach((card) => {
+        //if (card.type !== 0) {
+        if (!Object.keys(scale).includes(card.number.toString())){
+            debug(`card ${card.number} not in the scale`);
+            card.score = -1;
+        } else {
+            card.score = scale[card.number] + curve[card.ccm] * player.deck / 30;
+            debug('score : ', card.score);
+        }
+    });
+    cards.sort((card1, card2) => card2.score - card1.score)
+    curve[cards[0].ccm]--;
+    pick(cards[0].draftId);
+}
+
+
+/****************************************************/
+/*                  phases                          */
+/****************************************************/
+
+function combat(creatures, oppCreatures){
+    // Sort creatures with lethal first then stronger
+    creatures.sort((crea1, crea2) => {
+        if (crea1.abilities.includes('L') === crea2.abilities.includes('L')) {
+            return crea2.power - crea1.power;
+        }
+        return crea2.abilities.includes('L') - crea1.abilities.includes('L');
+    });
+
+    creatures.forEach((crea) => {
+        if (crea.power === 0){
+            return;
+        }
+        const oppCreaWithGard = oppCreatures.filter(_crea => _crea.abilities.includes('G'));
+        oppCreaWithGard.sort((crea1, crea2) => crea2.power + crea2.toughness - (crea1.power + crea1.toughness));
+
+        let target = null;
+
+        if (oppCreaWithGard.length > 0){
+            target = oppCreaWithGard[0];
+            debug('target is the best guard creature');
+        } else if (crea.abilities.includes('L') && oppCreatures.length > 0){
+            const creaturesStronger = [...oppCreatures].sort((crea1, crea2) => crea2.power + crea2.toughness - (crea1.power + crea1.toughness));
+            target = creaturesStronger[0];
+            debug('target is the best creature');
+        } else {
+            const creaturesWeaker = oppCreatures.filter(oppCrea => oppCrea.power < crea.toughness && !oppCrea.abilities.includes('L'))
+                .sort((crea1, crea2) => crea2.power - crea1.power);
+            const creatureStrongerICanKill = oppCreatures.filter(oppCrea => oppCrea.toughness <= crea.power && oppCrea.power > crea.power)
+                .sort((crea1, crea2) => crea2.power - crea1.power);
+            if (creatureStrongerICanKill.length > 0){
+                target = creatureStrongerICanKill[0];
+                debug('target is a crea stronger I can kill');
+            }
+            if (creaturesWeaker.length > 0){
+                target = creaturesWeaker[0];
+                debug('target is a crea weaker');
+            }
+        }
+        attack(crea, target, oppCreatures);
+    });
+}
+
+function main(cards, player){
+    let playableCards = cards.filter(card => card.ccm <= player.mana);
+    while (playableCards.length > 0) {
+        playableCards.sort((card1, card2) => card2.ccm - card1.ccm);
+
+        printObj('playableCards', playableCards);
+
+        if (playableCards.length > 0){
+            const [card] = playableCards;
+            player.mana -= card.ccm;
+            play(card);
+        }
+        playableCards = cards.filter(card => card.location === 0)
+            .filter(card => card.ccm <= player.mana);
+    }
+}
+
+
+/****************************************************/
+/*                  loop                            */
+/****************************************************/
+
+function game(player, opponent, cards, opponentHand){
+    //printObj('player', player);
+    //printObj('opponent', opponent);
+    //printObj('cards', cards);
+
+    const cardsInHand = cards.filter(card => card.location === 0);
+    const cardsOnOppBoard = cards.filter(card => card.location === -1);
+    const cardsWithCharge = cardsInHand.filter(card => card.abilities.includes('C'));
+
+    // printObj('board', cardsOnBoard);
+    // printObj('board oppo', cardsOnOppBoard);
+    debug('main 1');
+    main(cardsWithCharge, player);
+
+    const cardsOnBoard = cards.filter(card => card.location === 1);
+
+    debug('combat');
+    combat(cardsOnBoard, cardsOnOppBoard);
+
+    debug('main 2');
+    main(cardsInHand, player);
+
+    debug('end of turn');
+
+    pass();
+}
+
+while (true) {
+    actions = [];
+    const [player, opponent] = getPlayers();
+    const opponentHand = parseInt(readline());
+    const cards = getCards();
+    const phase = player.mana ? 'game' : 'draft';
+
+    playGame(phase, player, opponent, cards, opponentHand);
+}
