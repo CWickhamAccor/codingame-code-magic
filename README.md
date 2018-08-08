@@ -1,0 +1,1 @@
+# codingame-code-magic
