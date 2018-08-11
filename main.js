@@ -117,6 +117,11 @@ const scale = {
     114: 2,
     115: 2.5,
     116: 3,
+    120: 3,
+    122: 2.5,
+    123: 2.5,
+    133: 2.5,
+    139: 5,
     141: 2.5,
     144: 4,
     150: 4.5,
@@ -299,12 +304,13 @@ function draft(player, cards) {
     cards.forEach((card) => {
         if (!Object.keys(scale).includes(card.number.toString())) {
             debug(`card ${card.number} not in the scale`);
-            if (card.type === 1){
+            card.score = -1;
+            /*if (card.type === 1){
                 debug('green card, we take it');
                 card.score = 5;
             } else {
                 card.score = -1;
-            }
+            }*/
         } else {
             card.score = scale[card.number]/* + curve[card.ccm] * player.deck / 30*/;
             debug('score : ', card.score);
