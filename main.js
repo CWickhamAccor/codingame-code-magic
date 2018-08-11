@@ -184,6 +184,20 @@ function getCards() {
     return cards;
 }
 
+function getCardsFrom(cards, mode){
+    switch (mode){
+        case 'board':
+            return cards.filter(card => card.location === 1);
+        case 'oppBoard':
+            return cards.filter(card => card.location === -1);
+        case 'hand':
+            return cards.filter(card => card.location === 0);
+        default :
+            debug(`invalid mode : ${mode}`);
+            return cards;
+    }
+}
+
 function getCard(cards, id) {
     const [card] = cards.filter(_card => _card.id === id);
     return card;
@@ -352,9 +366,8 @@ function combat(creatures, oppCreatures) {
 
 //TODO modify main to take own creatures & opp creature into account
 //TODO be easier on targets for the big removal
-function main(cards, oppCreatures, player) {
-    let playableCards = getPlayable(cards, player);
-    const creatures = cards.filter(card => card.location === 1);
+function main(hand, creatures, oppCreatures, player) {
+    let playableCards = getPlayable(hand, player);
     printObj('creatures', creatures);
 
     while (playableCards.length > 0) {
@@ -382,28 +395,28 @@ function main(cards, oppCreatures, player) {
             playCreature(card);
         } else if (card.type === 1 && worstCreature) {
             player.mana -= card.ccm;
-            playPump(card, worstCreature, cards);
+            playPump(card, worstCreature, hand);
         } else if (card.type >= 2) {
             if (target && (target.power + target.abilities.length + target.ccm) / 3 > card.ccm) {
                 debug('target is legit');
                 if (target.toughness + card.toughness <= 0) {
                     debug('removal can kill it');
                     player.mana -= card.ccm;
-                    playRemoval(card, target, cards, oppCreatures);
+                    playRemoval(card, target, hand, oppCreatures);
                 } else {
                     debug(`removal can't kill it`);
                     debug(`${target.toughness} + ${card.toughness} = ${target.toughness + card.toughness}`);
-                    splice(cards, card.id);
+                    splice(hand, card.id);
                 }
             }
             else {
                 debug(`no good target found for ${card.id}`);
-                splice(cards, card.id);
+                splice(hand, card.id);
             }
         } else {
-            splice(cards, card.id);
+            splice(hand, card.id);
         }
-        playableCards = getPlayable(cards, player);
+        playableCards = getPlayable(hand, player);
     }
 }
 
@@ -418,26 +431,27 @@ function game(player, opponent, cards, opponentHand) {
     //printObj('opponent', opponent);
     //printObj('cards', cards);
 
-    const cardsInHand = cards.filter(card => card.location === 0);
-    const oppBoard = cards.filter(card => card.location === -1);
-    const board = cards.filter(card => card.location === 1);
-    const chargeCreaturesAndRemovals = cardsInHand.filter(card => (card.type === 0 && card.abilities.includes('C')) || card.type >= 2);
-    const chargeCreaAndSpells = cardsInHand.filter(card => card.type !== 0 || card.abilities.includes('C'));
+    const hand = getCardsFrom(cards, 'hand');
+    const oppBoard = getCardsFrom(cards, 'oppBoard');
+    let board = getCardsFrom(cards, 'board');
+    //const chargeCreaturesAndRemovals = hand.filter(card => (card.type === 0 && card.abilities.includes('C')) || card.type >= 2);
+    const chargeCreaAndSpells = hand.filter(card => card.type !== 0 || card.abilities.includes('C'));
 
     // printObj('board', cardsOnBoard);
     // printObj('board oppo', oppCreatures);
     debug('main 1');
-    //main(chargeCreaturesAndRemovals, oppCreatures, player);
 
-    main(chargeCreaAndSpells, oppBoard, player);
+    main(chargeCreaAndSpells, board, oppBoard, player);
 
-    const cardsOnBoard = cards.filter(card => card.location === 1);
+    board = getCardsFrom(cards, 'board');
 
     debug('combat');
-    combat(cardsOnBoard, oppBoard);
+    combat(board, oppBoard);
+
+    board = getCardsFrom(cards, 'board');
 
     debug('main 2');
-    main(cardsInHand, oppBoard, player);
+    main(hand, board, oppBoard, player);
 
     debug('end of turn');
 
