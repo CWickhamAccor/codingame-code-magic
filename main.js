@@ -111,7 +111,7 @@ const scale = {
     108: 1,
     109: 1.5,
     110: 0.75,
-    111: 2,
+    111: 2.5,
     112: 2,
     113: 0.5,
     114: 2,
@@ -242,6 +242,9 @@ function playCreature(card) {
 function playPump(card, target, cards) {
     debug(`[PLAY] pump ${card.id} on ${target.id}`);
     splice(cards, card.id);
+    target.power += card.power;
+    target.toughness += card.toughness;
+    target.abilities.push(...card.abilities);
     actions.push(`USE ${card.id} ${target.id}`);
 }
 
@@ -370,8 +373,6 @@ function combat(creatures, oppCreatures) {
     });
 }
 
-//TODO modify main to take own creatures & opp creature into account
-//TODO be easier on targets for the big removal
 function main(hand, creatures, oppCreatures, player) {
     let playableCards = getPlayable(hand, player);
     printObj('creatures', creatures);
@@ -391,8 +392,10 @@ function main(hand, creatures, oppCreatures, player) {
         // then we look for a creature to play
         const [target] = oppCreatures;
         const [card] = playableCards;
-        creatures.sort((crea1, crea2) => crea1.power - crea2.power ? 1 : crea1.toughness - crea2.toughness);
-        const [worstCreature] = creatures;
+        creatures.sort((crea1, crea2) => {
+            return crea2.power - crea1.power ? 1 : crea2.toughness - crea1.toughness
+        });
+        const worstCreature = creatures.slice(-1)[0] ;
 
         printObj('worstCrea', worstCreature);
 
