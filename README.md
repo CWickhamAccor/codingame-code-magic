@@ -2,9 +2,10 @@
 
 ## TODO
 
-- [ ] Remove pumpspells from cardlist after usage in main 1
+- [ ] Make ward creatures attack before non-ward creatures
+- [x] Remove pumpspells from cardlist after usage in main 1
 - [x] Remove ward from enemy creatures when attacked
-- [ ] When lethal, attack for lethal
+- [x] When lethal, attack for lethal
 - [x] Don't play pump that give lethal/ward/guard to a creature that already have lethal/ward/guard
 - [x] modify main to take own creatures & opp creature into account
 - [ ] improve worst creature
