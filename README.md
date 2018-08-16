@@ -2,6 +2,8 @@
 
 ## TODO
 
+- [ ] don't attack big creatures into big ward creatures (guard)
+- [ ] Improve the "on curve" play
 - [ ] Make ward creatures attack before non-ward creatures
 - [x] Remove pumpspells from cardlist after usage in main 1
 - [x] Remove ward from enemy creatures when attacked
@@ -14,3 +16,5 @@
 - [x] be easier on targets for the big removal
 - [ ] don't pump creatures when opponent has lethal creatures on board
 - [ ] don't pump creatures when you have only one in play and you can play another one
+- [ ] handle max board size
+- [ ] draft a curve

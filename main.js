@@ -9,7 +9,7 @@ const scale = {
     6: 2,
     7: 2,
     8: 2,
-    9: 2,
+    9: 3,
     10: 0.75,
     11: 1.5,
     12: 2,
@@ -97,11 +97,11 @@ const scale = {
     94: 2.5,
     95: 3,
     96: 2.5,
-    97: 2,
+    97: 2.5,
     98: 2.5,
     99: 3,
     100: 2,
-    101: 2.5,
+    101: 3,
     102: 2,
     103: 3,
     104: 2.5,
@@ -111,7 +111,7 @@ const scale = {
     108: 1,
     109: 1.5,
     110: 0.75,
-    111: 2.5,
+    111: 3,
     112: 2,
     113: 0.5,
     114: 2,
@@ -124,12 +124,12 @@ const scale = {
     139: 5,
     141: 2.5,
     144: 4,
-    150: 4.5,
+    150: 4,
     151: 5,
     152: 3.5,
     155: 3.5,
     158: 5,
-    159: 3,
+    159: 2,
 };
 const curve = {
     0: 0,
@@ -204,11 +204,14 @@ function getCardsFrom(cards, mode){
 }
 
 function getDangerosity(crea) {
-    return (crea.power + crea.toughness + crea.abilities.length) / 2;
+    return (crea.power + crea.toughness) / 2 + crea.abilities.length;
 }
 
 function getValue(removal) {
-    return removal.ccm - removal.cardDraw;
+    if (removal.toughness === -99) {
+        return 5;
+    }
+    return (removal.ccm - removal.toughness) / 2 - removal.cardDraw;
 }
 
 function getPlayable(cards, player) {
@@ -319,7 +322,7 @@ function draft(player, cards) {
             debug(`card ${card.number} not in the scale`);
             card.score = -1;
         } else {
-            card.score = scale[card.number]/* + curve[card.ccm] * player.deck / 30*/;
+            card.score = scale[card.number] + curve[card.ccm] * player.deck / 30;
             debug('score : ', card.score);
         }
     });
