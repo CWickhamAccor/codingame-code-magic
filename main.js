@@ -399,11 +399,19 @@ function main(hand, creatures, oppCreatures, player) {
         });
         //printObj('playableCards', playableCards);
 
+        //look for a good target for the removal
+        oppCreatures.sort((crea1, crea2) => {
+            return crea2.power - crea1.power || crea2.toughness - crea1.toughness;
+        });
         // for each removal, if we have a good target we use it
         // then we look for a creature to play
         const [target] = oppCreatures;
         const [card] = playableCards;
 
+        // Sort creatures to know which one to pump
+        creatures.sort((crea1, crea2) => {
+            return crea2.power - crea1.power || crea2.toughness - crea1.toughness
+        });
         //possible targets for pump spells
         const worstCreature = creatures.slice(-1)[0];
         const [bestCreature] = creatures;
@@ -415,10 +423,6 @@ function main(hand, creatures, oppCreatures, player) {
         }
         //handle pump spells
         else if (card.type === 1 && worstCreature) {
-            // Sort creatures to know which one to pump
-            creatures.sort((crea1, crea2) => {
-                return crea2.power - crea1.power || crea2.toughness - crea1.toughness
-            });
             printObj('worstCrea', worstCreature);
             printObj('bestCrea', bestCreature);
 
@@ -452,11 +456,6 @@ function main(hand, creatures, oppCreatures, player) {
         }
         //handle removals
         else if (card.type >= 2 && target) {
-            //look for a good target for the removal
-            oppCreatures.sort((crea1, crea2) => {
-                return crea2.power - crea1.power || crea2.toughness - crea1.toughness;
-            });
-
             const danger = getDangerosity(target);
             const value = getValue(card);
             debug(`danger = ${danger}`);
