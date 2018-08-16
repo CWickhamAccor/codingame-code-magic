@@ -223,7 +223,6 @@ function printObj(key, object) {
 
 /****************************************************/
 /*                  actions                         */
-
 /****************************************************/
 
 function playRemoval(card, target, cards, oppCreatures) {
@@ -381,7 +380,7 @@ function main(hand, creatures, oppCreatures, player) {
         playableCards.sort((card1, card2) => {
             return card2.type - card1.type ? 1 : card2.ccm - card1.ccm;
         });
-        printObj('playableCards', playableCards);
+        //printObj('playableCards', playableCards);
 
         //look for a good target for the removal
         oppCreatures.sort((crea1, crea2) => {
@@ -392,19 +391,29 @@ function main(hand, creatures, oppCreatures, player) {
         // then we look for a creature to play
         const [target] = oppCreatures;
         const [card] = playableCards;
+
+        // Sort creatures to know which one to pump
         creatures.sort((crea1, crea2) => {
             return crea2.power - crea1.power ? 1 : crea2.toughness - crea1.toughness
         });
-        const worstCreature = creatures.slice(-1)[0] ;
+        const worstCreature = creatures.slice(-1)[0];
+        const [bestCreature] = creatures;
 
         printObj('worstCrea', worstCreature);
+        printObj('bestCrea', bestCreature);
 
         if (card.type === 0) {
             player.mana -= card.ccm;
             playCreature(card);
         } else if (card.type === 1 && worstCreature) {
             player.mana -= card.ccm;
-            playPump(card, worstCreature, hand);
+            if (card.abilities.includes('W') || card.abilities.includes('G') || card.abilities.includes('D')){
+                debug('playing pump on the best creature');
+                playPump(card, bestCreature, hand);
+            } else {
+                debug('playing pump on the worst creature');
+                playPump(card, worstCreature, hand);
+            }
         } else if (card.type >= 2) {
             if (target && (target.power + target.abilities.length + target.ccm) / 3 > card.ccm) {
                 debug('target is legit');
