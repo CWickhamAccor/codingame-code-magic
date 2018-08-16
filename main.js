@@ -237,6 +237,7 @@ function printObj(key, object) {
 
 function playRemoval(card, target, cards, oppCreatures) {
     debug(`[PLAY] removal ${card.id} on ${target.id}`);
+    card.location = -2;
     splice(cards, card.id);
     splice(oppCreatures, target.id);
     actions.push(`USE ${card.id} ${target.id}`);
@@ -250,6 +251,7 @@ function playCreature(card) {
 
 function playPump(card, target, cards) {
     debug(`[PLAY] pump ${card.id} on ${target.id}`);
+    card.location = -2;
     splice(cards, card.id);
     target.power += card.power;
     target.toughness += card.toughness;
@@ -342,9 +344,12 @@ function draft(player, cards) {
 function combat(creatures, oppCreatures, opponent) {
     // Sort creatures with lethal first then stronger
     creatures.sort((crea1, crea2) => {
-        if (crea1.abilities.includes('L') === crea2.abilities.includes('L')) {
+        if (crea1.abilities.includes('L') && crea2.abilities.includes('L')) {
+            return crea1.power - crea2.power;
+        } else if (!crea1.abilities.includes('L') && !crea2.abilities.includes('L')) {
             return crea2.power - crea1.power;
         }
+
         return crea2.abilities.includes('L') - crea1.abilities.includes('L');
     });
 
@@ -436,9 +441,14 @@ function main(hand, creatures, oppCreatures, player) {
                 }
             }
             else if (card.abilities.includes('W') || card.abilities.includes('G') || card.abilities.includes('D')){
-                debug('playing pump on the best creature');
-                player.mana -= card.ccm;
-                playPump(card, bestCreature, hand);
+                if (bestCreature.abilities.includes('G')){
+                    debug(`don't play pump on a creature that's already guard`);
+                    splice(hand, card.id);
+                } else {
+                    debug('playing pump on the best creature');
+                    player.mana -= card.ccm;
+                    playPump(card, bestCreature, hand);
+                }
             } else {
                 debug('playing pump on the worst creature');
                 player.mana -= card.ccm;
@@ -482,18 +492,12 @@ function main(hand, creatures, oppCreatures, player) {
 /****************************************************/
 
 function game(player, opponent, cards, opponentHand) {
-    //printObj('player', player);
-    //printObj('opponent', opponent);
-    //printObj('cards', cards);
-
-    const hand = getCardsFrom(cards, 'hand');
+    let hand = getCardsFrom(cards, 'hand');
     const oppBoard = getCardsFrom(cards, 'oppBoard');
     let board = getCardsFrom(cards, 'board');
     //const chargeCreaturesAndRemovals = hand.filter(card => (card.type === 0 && card.abilities.includes('C')) || card.type >= 2);
     const chargeCreaAndSpells = hand.filter(card => card.type !== 0 || card.abilities.includes('C'));
 
-    // printObj('board', cardsOnBoard);
-    // printObj('board oppo', oppCreatures);
     debug('main 1');
 
     main(chargeCreaAndSpells, board, oppBoard, player);
@@ -504,6 +508,7 @@ function game(player, opponent, cards, opponentHand) {
     combat(board, oppBoard, opponent);
 
     board = getCardsFrom(cards, 'board');
+    hand = getCardsFrom(cards, 'hand');
 
     debug('main 2');
     main(hand, board, oppBoard, player);
