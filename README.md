@@ -2,6 +2,11 @@
 
 ## TODO
 
+- [ ] don't use lethal pump spells on 0 power creatures
+- [ ] don't attack lethal creatures into ward ones
+- [ ] priorize lethal targets for ward creatures
+- [ ] differenciate Ward and guard for pumpspells
+- [ ] better handling of haste creatures
 - [ ] don't attack big creatures into big ward creatures (guard)
 - [x] Improve the "on curve" play
 - [ ] Improve targets for removals
@@ -18,4 +23,5 @@
 - [ ] don't pump creatures when opponent has lethal creatures on board
 - [ ] don't pump creatures when you have only one in play and you can play another one
 - [ ] handle max board size
-- [ ] draft a curve
+- [ ] draft a better curve
+- [ ] be easier on removals when low on life

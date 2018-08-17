@@ -44,7 +44,7 @@ const scale = {
     41: 2.5,
     42: 2,
     43: 3,
-    44: 4.5,
+    44: 5,
     45: 4,
     46: 2.5,
     47: 2.5,
@@ -322,7 +322,7 @@ function draft(player, cards) {
             debug(`card ${card.number} not in the scale`);
             card.score = -1;
         } else {
-            card.score = scale[card.number] + curve[card.ccm] * player.deck / 30;
+            card.score = scale[card.number] + curve[card.ccm] * player.deck / 60;
             debug('score : ', card.score);
         }
     });
@@ -375,7 +375,7 @@ function combat(creatures, oppCreatures, opponent) {
         } else if (crea.abilities.includes('L') && oppCreatures.length > 0) {
             const creaturesStronger = [...oppCreatures].sort((crea1, crea2) => crea2.power + crea2.toughness - (crea1.power + crea1.toughness));
             target = creaturesStronger[0];
-            debug('target is the best creature');
+            debug('target is the best creature (I have lethal)');
         } else {
             const creaturesWeaker = oppCreatures.filter(oppCrea => oppCrea.power < crea.toughness && !oppCrea.abilities.includes('L'))
                 .sort((crea1, crea2) => crea2.power - crea1.power);
