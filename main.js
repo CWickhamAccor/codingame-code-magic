@@ -336,6 +336,10 @@ function draft(player, cards) {
 /*                  phases                          */
 /****************************************************/
 
+/**
+ *  Combat
+ */
+
 function combat(creatures, oppCreatures, opponent) {
     // Sort creatures with lethal first then stronger
     creatures.sort((crea1, crea2) => {
@@ -390,6 +394,10 @@ function combat(creatures, oppCreatures, opponent) {
     });
 }
 
+/**
+ *  Main
+ **/
+
 function main(hand, creatures, oppCreatures, player) {
     let playableCards = getPlayable(hand, player);
     debug(`${player.mana} mana available`);
@@ -419,6 +427,7 @@ function main(hand, creatures, oppCreatures, player) {
         const worstCreature = creatures.slice(-1)[0];
         const [bestCreature] = creatures;
 
+        /** Play cards **/
         //handle creatures
         if (card.type === 0) {
             player.mana -= card.ccm;
@@ -426,59 +435,11 @@ function main(hand, creatures, oppCreatures, player) {
         }
         //handle pump spells
         else if (card.type === 1 && worstCreature) {
-            printObj('worstCrea', worstCreature);
-            printObj('bestCrea', bestCreature);
-
-            // special handle for lethal pumps
-            if (card.abilities.includes('L')){
-                if (worstCreature.abilities.includes('L')){
-                    debug(`don't play pump on a creature that's already lethal`);
-                    splice(hand, card.id);
-                } else {
-                    debug('giving lethal to the worst creature');
-                    player.mana -= card.ccm;
-                    playPump(card, worstCreature, hand);
-                }
-            }
-            // special handle for pumps that are good on the best creature
-            else if (card.abilities.includes('W') || card.abilities.includes('G') || card.abilities.includes('D')){
-                if (bestCreature.abilities.includes('G')){
-                    debug(`don't play pump on a creature that's already guard`);
-                    splice(hand, card.id);
-                } else {
-                    debug('playing pump on the best creature');
-                    player.mana -= card.ccm;
-                    playPump(card, bestCreature, hand);
-                }
-            // power pump go on the worst creature
-            } else {
-                debug('playing pump on the worst creature');
-                player.mana -= card.ccm;
-                playPump(card, worstCreature, hand);
-            }
+            handlePumpSpell(card, hand, player, worstCreature, bestCreature);
         }
         //handle removals
         else if (card.type >= 2 && target) {
-            const danger = getDangerosity(target);
-            const value = getValue(card);
-            debug(`danger = ${danger}`);
-            debug(`value = ${value}`);
-            if (danger > value) {
-                debug('target is legit');
-                if (target.toughness + card.toughness <= 0 && !target.abilities.includes('W')) {
-                    debug('removal can kill it');
-                    player.mana -= card.ccm;
-                    playRemoval(card, target, hand, oppCreatures);
-                } else {
-                    debug(`removal can't kill it`);
-                    debug(`${target.toughness} + ${card.toughness} = ${target.toughness + card.toughness}`);
-                    splice(hand, card.id);
-                }
-            }
-            else {
-                debug(`no good target found for ${card.id}`);
-                splice(hand, card.id);
-            }
+            handleRemoval(card, target, hand, player, oppCreatures);
         } else {
             debug(`card ${card.id} not handled`);
             splice(hand, card.id);
@@ -487,6 +448,61 @@ function main(hand, creatures, oppCreatures, player) {
     }
 }
 
+function handlePumpSpell(card, hand, player, worstCreature, bestCreature){
+    printObj('worstCrea', worstCreature);
+    printObj('bestCrea', bestCreature);
+
+    // special handle for lethal pumps
+    if (card.abilities.includes('L')){
+        if (worstCreature.abilities.includes('L')){
+            debug(`don't play pump on a creature that's already lethal`);
+            splice(hand, card.id);
+        } else {
+            debug('giving lethal to the worst creature');
+            player.mana -= card.ccm;
+            playPump(card, worstCreature, hand);
+        }
+    }
+    // special handle for pumps that are good on the best creature
+    else if (card.abilities.includes('W') || card.abilities.includes('G') || card.abilities.includes('D')){
+        if (bestCreature.abilities.includes('G')){
+            debug(`don't play pump on a creature that's already guard`);
+            splice(hand, card.id);
+        } else {
+            debug('playing pump on the best creature');
+            player.mana -= card.ccm;
+            playPump(card, bestCreature, hand);
+        }
+        // power pump go on the worst creature
+    } else {
+        debug('playing pump on the worst creature');
+        player.mana -= card.ccm;
+        playPump(card, worstCreature, hand);
+    }
+}
+
+function handleRemoval(card, target, hand, player, oppCreatures){
+    const danger = getDangerosity(target);
+    const value = getValue(card);
+    debug(`danger = ${danger}`);
+    debug(`value = ${value}`);
+    if (danger > value) {
+        debug('target is legit');
+        if (target.toughness + card.toughness <= 0 && !target.abilities.includes('W')) {
+            debug('removal can kill it');
+            player.mana -= card.ccm;
+            playRemoval(card, target, hand, oppCreatures);
+        } else {
+            debug(`removal can't kill it`);
+            debug(`${target.toughness} + ${card.toughness} = ${target.toughness + card.toughness}`);
+            splice(hand, card.id);
+        }
+    }
+    else {
+        debug(`no good target found for ${card.id}`);
+        splice(hand, card.id);
+    }
+}
 
 /****************************************************/
 /*                  loop                            */
