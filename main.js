@@ -346,7 +346,7 @@ function combat(creatures, oppCreatures, opponent) {
         if (crea1.abilities.includes('L') && crea2.abilities.includes('L')) {
             return crea2.abilities.includes('W') - crea1.abilities.includes('W') || crea1.power - crea2.power;
         } else if (!crea1.abilities.includes('L') && !crea2.abilities.includes('L')) {
-            return crea2.abilities.includes('W') - crea1.abilities.includes('W') || crea2.power - crea1.power;
+            return crea2.abilities.includes('W') - crea1.abilities.includes('W') || crea2.power - crea1.power || crea2.toughness - crea1.toughness;
         }
 
         return crea2.abilities.includes('L') - crea1.abilities.includes('L');
@@ -374,8 +374,12 @@ function combat(creatures, oppCreatures, opponent) {
             debug('we have lethal here');
         } else if (crea.abilities.includes('L') && oppCreatures.length > 0) {
             const creaturesStronger = [...oppCreatures].sort((crea1, crea2) => crea2.power + crea2.toughness - (crea1.power + crea1.toughness));
-            target = creaturesStronger[0];
+            target = creaturesStronger.shift();
             debug('target is the best creature (I have lethal)');
+            while (target && target.abilities.includes('W') && creaturesStronger.length >= 0){
+                target = creaturesStronger.shift() || null;
+                debug('target has ward, we select another one');
+            }
         } else {
             const creaturesWeaker = oppCreatures.filter(oppCrea => oppCrea.power < crea.toughness && !oppCrea.abilities.includes('L'))
                 .sort((crea1, crea2) => crea2.power - crea1.power);
@@ -464,6 +468,9 @@ function handlePumpSpell(card, hand, player, worstCreature, bestCreature){
     if (card.abilities.includes('L')){
         if (worstCreature.abilities.includes('L')){
             debug(`don't play pump on a creature that's already lethal`);
+            splice(hand, card.id);
+        } else if(worstCreature.power + card.power === 0) {
+            debug(`don't put lethal pumpspells on 0 power creatures`);
             splice(hand, card.id);
         } else {
             debug('giving lethal to the worst creature');
