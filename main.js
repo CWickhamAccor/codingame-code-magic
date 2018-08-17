@@ -405,6 +405,13 @@ function main(hand, creatures, oppCreatures, player) {
     //printObj('creatures', creatures);
 
     while (playableCards.length > 0) {
+        const combinations = getCombinations(playableCards);
+        const playableSets = getPlayableSets(combinations, player.mana);
+        const readableSets = getReadableSets(playableSets);
+
+        const [bestCombination] = playableSets;
+        printObj('Best set', readableSets[0]);
+
         playableCards.sort((card1, card2) => {
             return card2.type - card1.type || card2.ccm - card1.ccm;
         });
@@ -417,7 +424,8 @@ function main(hand, creatures, oppCreatures, player) {
         // for each removal, if we have a good target we use it
         // then we look for a creature to play
         const [target] = oppCreatures;
-        const [card] = playableCards;
+        //const [card] = playableCards;
+        const [card] = bestCombination;
 
         // Sort creatures to know which one to pump
         creatures.sort((crea1, crea2) => {
@@ -488,7 +496,7 @@ function handleRemoval(card, target, hand, player, oppCreatures){
     debug(`value = ${value}`);
     if (danger > value) {
         debug('target is legit');
-        if (target.toughness + card.toughness <= 0 && !target.abilities.includes('W')) {
+        if (target.toughness + card.toughness <= 0 && (!target.abilities.includes('W') || card.abilities.includes('W'))) {
             debug('removal can kill it');
             player.mana -= card.ccm;
             playRemoval(card, target, hand, oppCreatures);
@@ -502,6 +510,38 @@ function handleRemoval(card, target, hand, player, oppCreatures){
         debug(`no good target found for ${card.id}`);
         splice(hand, card.id);
     }
+}
+
+/**
+ * Returns the Sets of all combinations of cards
+ */
+function getCombinations(rest, active = [], res = []){
+    if (rest.length === 0){
+        res.push(active);
+        return active;
+    } else {
+        getCombinations(rest.slice(1), [...active, rest[0]], res);
+        getCombinations(rest.slice(1), active, res);
+    }
+    return res;
+}
+
+/**
+ * Returns only the sets of cards that are playable with the available mana
+ */
+function getPlayableSets(cards, mana) {
+    return cards
+        .filter(tab => tab.map(a => a.ccm).reduce((a, b) => a + b, 0) <= mana)
+        .sort((t1, t2) => t2.map(a => a.ccm).reduce((a, b) => a + b, 0) - t1.map(a => a.ccm).reduce((a, b) => a + b, 0));
+}
+
+/**
+ * Returns a simplified version of the sets that is readable
+ */
+function getReadableSets(set){
+    return set.map(tab => tab.map(e => {
+        return {id: e.number, ccm: e.ccm};
+    }));
 }
 
 /****************************************************/
