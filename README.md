@@ -3,9 +3,9 @@
 ## TODO
 
 - [ ] don't attack big creatures into big ward creatures (guard)
-- [ ] Improve the "on curve" play
+- [x] Improve the "on curve" play
 - [ ] Improve targets for removals
-- [ ] Make ward creatures attack before non-ward creatures
+- [x] Make ward creatures attack before non-ward creatures
 - [x] Remove pumpspells from cardlist after usage in main 1
 - [x] Remove ward from enemy creatures when attacked
 - [x] When lethal, attack for lethal
