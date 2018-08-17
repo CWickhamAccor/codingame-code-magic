@@ -204,7 +204,7 @@ function getCardsFrom(cards, mode){
 }
 
 function getDangerosity(crea) {
-    return (crea.power + crea.toughness) / 2 + crea.abilities.length;
+    return (crea.power + crea.toughness) / 2 + crea.abilities.length + crea.abilities.includes('L') + crea.abilities.includes('G');
 }
 
 function getValue(removal) {
@@ -480,8 +480,8 @@ function handlePumpSpell(card, hand, player, worstCreature, bestCreature){
     }
     // special handle for pumps that are good on the best creature
     else if (card.abilities.includes('W') || card.abilities.includes('G') || card.abilities.includes('D')){
-        if (bestCreature.abilities.includes('G')){
-            debug(`don't play pump on a creature that's already guard`);
+        if (bestCreature.abilities.includes('G') && !card.abilities.includes('W')){
+            debug(`don't play pump on a creature that's already guard (except for ward)`);
             splice(hand, card.id);
         } else {
             debug('playing pump on the best creature');
