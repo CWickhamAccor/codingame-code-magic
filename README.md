@@ -4,8 +4,8 @@
 
 - [ ] don't use lethal pump spells on 0 power creatures
 - [ ] don't attack lethal creatures into ward ones
-- [ ] priorize lethal targets for ward creatures
-- [ ] differenciate Ward and guard for pumpspells
+- [ ] prioritize lethal targets for ward creatures
+- [ ] differentiate Ward and guard for pumpspells
 - [ ] better handling of haste creatures
 - [ ] don't attack big creatures into big ward creatures (guard)
 - [x] Improve the "on curve" play
