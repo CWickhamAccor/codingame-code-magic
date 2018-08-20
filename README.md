@@ -3,6 +3,7 @@
 ## TODO
 
 
+- [ ] trigger ward with small/ward creatures
 - [ ] prioritize lethal targets for ward creatures
 - [ ] differentiate Ward and guard for pumpspells
 - [ ] better handling of haste creatures
