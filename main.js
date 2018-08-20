@@ -204,7 +204,7 @@ function getCardsFrom(cards, mode){
 }
 
 function getDangerosity(crea) {
-    return (crea.power + crea.toughness) / 2 + crea.abilities.length + crea.abilities.includes('L') + crea.abilities.includes('G');
+    return (crea.power + crea.toughness + crea.abilities.includes('L') + crea.abilities.includes('G')) / 2 + crea.abilities.length;
 }
 
 function getValue(removal) {
@@ -427,7 +427,7 @@ function main(hand, creatures, oppCreatures, player) {
         });
         // for each removal, if we have a good target we use it
         // then we look for a creature to play
-        const [target] = oppCreatures;
+        //const [target] = oppCreatures;
         //const [card] = playableCards;
         const [card] = bestCombination;
 
@@ -450,8 +450,8 @@ function main(hand, creatures, oppCreatures, player) {
             handlePumpSpell(card, hand, player, worstCreature, bestCreature);
         }
         //handle removals
-        else if (card.type >= 2 && target) {
-            handleRemoval(card, target, hand, player, oppCreatures);
+        else if (card.type >= 2 && oppCreatures.length > 0) {
+            handleRemoval(card, oppCreatures, hand, player);
         } else {
             debug(`card ${card.id} not handled`);
             splice(hand, card.id);
@@ -496,24 +496,31 @@ function handlePumpSpell(card, hand, player, worstCreature, bestCreature){
     }
 }
 
-function handleRemoval(card, target, hand, player, oppCreatures){
-    const danger = getDangerosity(target);
-    const value = getValue(card);
-    debug(`danger = ${danger}`);
-    debug(`value = ${value}`);
-    if (danger > value) {
-        debug('target is legit');
-        if (target.toughness + card.toughness <= 0 && (!target.abilities.includes('W') || card.abilities.includes('W'))) {
-            debug('removal can kill it');
-            player.mana -= card.ccm;
-            playRemoval(card, target, hand, oppCreatures);
-        } else {
-            debug(`removal can't kill it`);
-            debug(`${target.toughness} + ${card.toughness} = ${target.toughness + card.toughness}`);
-            splice(hand, card.id);
+function handleRemoval(card, oppCreatures, hand, player){
+    let played = false;
+    oppCreatures.some(target => {
+        const danger = getDangerosity(target);
+        const value = getValue(card);
+        debug(`danger = ${danger}`);
+        debug(`value = ${value}`);
+        if (danger > value) {
+            debug('target is legit');
+            if (target.toughness + card.toughness <= 0 && (!target.abilities.includes('W') || card.abilities.includes('W'))) {
+                debug('removal can kill it');
+                player.mana -= card.ccm;
+                played = true;
+                playRemoval(card, target, hand, oppCreatures);
+                return played;
+            } else {
+                debug(`removal can't kill it`);
+                debug(`${target.toughness} + ${card.toughness} = ${target.toughness + card.toughness}`);
+            }
         }
-    }
-    else {
+        else {
+            debug(`target isn't good enough`);
+        }
+    });
+    if (!played) {
         debug(`no good target found for ${card.id}`);
         splice(hand, card.id);
     }

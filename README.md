@@ -9,7 +9,7 @@
 - [ ] better handling of haste creatures
 - [ ] don't attack big creatures into big ward creatures (guard)
 - [x] Improve the "on curve" play
-- [ ] Improve targets for removals
+- [x] Improve targets for removals
 - [x] Make ward creatures attack before non-ward creatures
 - [x] Remove pumpspells from cardlist after usage in main 1
 - [x] Remove ward from enemy creatures when attacked
