@@ -256,6 +256,9 @@ function playRemoval(card, target, cards, oppCreatures) {
 function playCreature(card) {
     debug(`[PLAY] ${card.id}`);
     card.location = 1;
+    if (!card.abilities.includes('C')){
+        card.sick = true;
+    }
     actions.push(`SUMMON ${card.id}`);
 }
 
@@ -355,7 +358,8 @@ function draft(player, cards) {
  */
 
 function combat(creatures, oppCreatures, opponent) {
-    const availableCreas = [...creatures];
+    // get all non-summoning sick creatures
+    const availableCreas = [...creatures].filter(crea => !crea.sick);
 
     while(availableCreas.length > 0){
 
@@ -667,10 +671,10 @@ function game(player, opponent, cards, opponentHand) {
     let hand = getCardsFrom(cards, 'hand');
     let oppBoard = getCardsFrom(cards, 'oppBoard');
     let board = getCardsFrom(cards, 'board');
-    const chargeCreaAndSpells = hand.filter(card => card.type !== 0 || card.abilities.includes('C'));
+    //const chargeCreaAndSpells = hand.filter(card => card.type !== 0 || card.abilities.includes('C'));
 
     debug('main 1');
-    main(chargeCreaAndSpells, board, oppBoard, player);
+    main(hand, board, oppBoard, player);
 
     board = getCardsFrom(cards, 'board');
 
