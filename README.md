@@ -2,13 +2,17 @@
 
 ## TODO
 
-
-- [ ] prioritize lethal targets for ward creatures
+- [ ] prioritize the combinations of cards
+- [x] better ordering of the combat
+- [x] trigger ward with small/ward creatures
+- [x] prioritize lethal targets for ward creatures
 - [ ] differentiate Ward and guard for pumpspells
 - [ ] better handling of haste creatures
-- [ ] don't attack big creatures into big ward/lethal creatures (guard)
+- [x] don't attack big creatures into big ward/lethal creatures (guard)
 - [ ] improve worst creature
-- [ ] encourage ward creatures to eat other creatures
+- [x] encourage ward creatures to eat other creatures
+- [ ] better ordering of pump/developping the board
+- [ ] don't give lethal to a creature that's already big enough
 - [ ] don't pump creatures when opponent has lethal creatures on board
 - [ ] don't pump creatures when you have only one in play and you can play another one
 - [ ] handle max board size
