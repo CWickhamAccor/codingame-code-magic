@@ -206,6 +206,14 @@ function getCardsFrom(cards, mode){
 }
 
 function getDangerosity(crea) {
+    // in case of pump spell
+    if (crea.type === 1){
+        const pump = {...crea};
+        pump.toughness += 1;
+        pump.type = 0;
+        pump.abilities.push('C');
+        return getDangerosity(pump);
+    }
     let danger = 0;
     if (crea.abilities.includes('L')) {
         danger += 8 + crea.power / 2;
@@ -213,11 +221,10 @@ function getDangerosity(crea) {
         danger += 5 * crea.abilities.includes('W');
         danger += 3 * crea.abilities.includes('G');
     } else {
-        danger += 2.5 * crea.power * (1 + crea.abilities.includes('W'));
-        danger += 2.5 * crea.toughness * (1.5 + crea.abilities.includes('G'));
+        danger += crea.power * crea.toughness / 4;
+        danger += 1.5 * crea.power * (1.5 + crea.abilities.includes('W'));
+        danger += 1.5 * crea.toughness * (1.5 + crea.abilities.includes('G'));
     }
-    //const oldDanger = (crea.power + crea.toughness + crea.abilities.includes('L') + crea.abilities.includes('G')) / 2 + crea.abilities.length;
-    //printObj('old/new', [oldDanger, danger]);
     return danger;
 }
 
@@ -513,16 +520,16 @@ function getTarget(crea, availableCreas, oppCreatures, player, opponent) {
         }
     } else if (oppCreaWithWard.length > 0) {
         const [bestWard] = oppCreaWithWard;
-        if (getDangerosity(bestWard) > getDangerosity(crea) && !crea.abilities.includes('L')){
+        if (getDangerosity(bestWard) > 1.5 * getDangerosity(crea) && !crea.abilities.includes('L')){
             debug('target is the best ward creature');
             target = bestWard;
         }
     }
     if (target === null) {
         oppCreatures.sort((crea1, crea2) => getStronger(crea1, crea2) || crea2.abilities.length - crea1.abilities.length);
-        const creaturesWeaker = oppCreatures.filter(oppCrea => oppCrea.power < crea.toughness && !oppCrea.abilities.includes('L'))
-        const creaturesWeakerICanKill = creaturesWeaker.filter(oppCrea => oppCrea.toughness <= crea.power && !oppCrea.abilities.includes('W'));
-        const creatureStrongerICanKill = oppCreatures.filter(oppCrea => oppCrea.toughness <= crea.power && oppCrea.power > crea.power && !oppCrea.abilities.includes('W'))
+        const creaturesWeaker = oppCreatures.filter(oppCrea => !canKill(oppCrea, crea));
+        const creaturesWeakerICanKill = creaturesWeaker.filter(oppCrea => canKill(crea, oppCrea));
+        const creatureStrongerICanKill = oppCreatures.filter(oppCrea => canKill(crea, oppCrea) && getDangerosity(oppCrea) > getDangerosity(crea));
 
         if (creatureStrongerICanKill.length > 0) {
             target = creatureStrongerICanKill[0];
@@ -555,12 +562,28 @@ function main(hand, creatures, oppCreatures, player) {
         const playableSets = getPlayableSets(combinations, player.mana);
         const readableSets = getReadableSets(playableSets);
 
-        playableSets.map((set,i) => {
-            //printObj('set', set);
-        });
+        //printObj('playableSets', playableSets);
 
-        const [bestCombination] = playableSets;
-        printObj('Best set', readableSets[0]);
+        const setScores = [];
+        playableSets.forEach((set, i) => {
+            let score = 0;
+            set.forEach((card) => {
+                if (card.type === 0) {
+                    score += getDangerosity(card);
+                } else if (card.type === 1) {
+                    score += getDangerosity(card);
+                } else if (card.type >= 2) {
+                    score += getValue(card);
+                }
+            });
+            setScores.push({i, score});
+        });
+        setScores.sort((s1, s2) => s2.score - s1.score);
+        printObj('set scores', setScores);
+        printObj('sets', readableSets);
+        const bestSetId = setScores[0].i;
+        const bestCombination = playableSets[bestSetId];
+        printObj('Best set', readableSets[bestSetId]);
 
         playableCards.sort((card1, card2) => {
             return card2.type - card1.type || card2.ccm - card1.ccm;

@@ -2,8 +2,9 @@
 
 ## TODO
 
+- [ ] find all possible attacks and their outcomes and decide the best set of attacks
 - [ ] improve dangerosity for creatures
-- [ ] prioritize the combinations of cards
+- [x] prioritize the combinations of cards
 - [x] better ordering of the combat
 - [x] trigger ward with small/ward creatures
 - [x] prioritize lethal targets for ward creatures
