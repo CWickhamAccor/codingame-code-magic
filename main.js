@@ -213,10 +213,10 @@ function getDangerosity(crea) {
         danger += 5 * crea.abilities.includes('W');
         danger += 3 * crea.abilities.includes('G');
     } else {
-        danger += 2 * crea.power * (1 + crea.abilities.includes('W'));
-        danger += 3 * crea.toughness * (1 + crea.abilities.includes('G'));
+        danger += 2.5 * crea.power * (1 + crea.abilities.includes('W'));
+        danger += 2.5 * crea.toughness * (1.5 + crea.abilities.includes('G'));
     }
-    const oldDanger = (crea.power + crea.toughness + crea.abilities.includes('L') + crea.abilities.includes('G')) / 2 + crea.abilities.length;
+    //const oldDanger = (crea.power + crea.toughness + crea.abilities.includes('L') + crea.abilities.includes('G')) / 2 + crea.abilities.length;
     //printObj('old/new', [oldDanger, danger]);
     return danger;
 }
@@ -226,6 +226,10 @@ function getValue(removal) {
         return 25;
     }
     return 5 * ((removal.ccm - removal.toughness) / 2 - removal.cardDraw);
+}
+
+function canKill(crea1, crea2){
+    return !crea2.abilities.includes('W') && (crea1.abilities.includes('L') || crea1.power >= crea2.toughness);
 }
 
 function getWeaker(crea1, crea2){
@@ -394,16 +398,23 @@ function combat(creatures, oppCreatures, player, opponent) {
                 });
             } else {
                 // get Creatures that can kill it, take the worst one
-                const creaThatCanKillIt = availableCreas.filter(crea => crea.abilities.includes('L') || crea.power >= bestGuard.toughness);
+                const creaThatCanKillIt = availableCreas.filter(crea => canKill(crea, bestGuard));
                 if (creaThatCanKillIt.length > 0) {
-                    //if some crea can kill it, use the worst one that can kill it
-                    debug('some crea can kill the guard, we use the worst one');
-                    availableCreas.sort((crea1, crea2) => {
-                        const canKill = (crea, guard) => {
-                            return crea.abilities.includes('L') || crea.power >= guard.toughness;
-                        };
-                        return canKill(crea2, bestGuard) - canKill(crea1, bestGuard) || getWeaker(crea1, crea2);
-                    });
+                    //if some crea can kill it, use the worst one that can kill it without dying
+                    const creaThatWouldSurvive = creaThatCanKillIt.filter(crea => !canKill(bestGuard, crea));
+                    if (creaThatWouldSurvive.length > 0){
+                        debug('some crea can kill the guard without dying, we use the worst one');
+                        availableCreas.sort((crea1, crea2) => {
+                            return canKill(crea2, bestGuard) - canKill(crea1, bestGuard) ||
+                                !canKill(bestGuard, crea2) - !canKill(bestGuard, crea1) ||
+                                getWeaker(crea1, crea2);
+                        })
+                    } else {
+                        debug('some crea can kill the guard suiciding, we use the worst one');
+                        availableCreas.sort((crea1, crea2) => {
+                            return canKill(crea2, bestGuard) - canKill(crea1, bestGuard) || getWeaker(crea1, crea2);
+                        });
+                    }
                 } else {
                     // Sort creatures with lethal & ward first then stronger
                     debug('nobody can kill the guard crea so we strike with our best crea');
