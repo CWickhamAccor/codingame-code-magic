@@ -225,6 +225,9 @@ function getDangerosity(crea) {
         danger += 1.5 * crea.power * (1.5 + crea.abilities.includes('W'));
         danger += 1.5 * crea.toughness * (1.5 + crea.abilities.includes('G'));
     }
+    if (crea.location === 0 && crea.abilities.includes('C')){
+        danger += 2;
+    }
     return danger;
 }
 
@@ -401,7 +404,7 @@ function combat(creatures, oppCreatures, player, opponent) {
                 // Find a useless creature/smaller ward creature, we will attack with it first
                 debug('use a ward or smaller creature to attack the guard + ward');
                 availableCreas.sort((crea1, crea2) => {
-                    return hasAbility(crea1, crea2, 'W') || getWeaker(crea1, crea2);
+                    return hasAbility(crea1, crea2, 'W') || hasAbility(crea2, crea1, 'L') || getWeaker(crea1, crea2);
                 });
             } else {
                 // get Creatures that can kill it, take the worst one
