@@ -226,18 +226,24 @@ function getDangerosity(crea) {
         danger += 1.5 * crea.toughness * (1.5 + crea.abilities.includes('G'));
     }
     if (crea.location === 0 && crea.abilities.includes('C')){
-        danger += 2;
+        danger += 2 * (1 + 3 * crea.abilities.includes('L'));
     }
     return danger;
 }
 
 function getValue(removal) {
     if (removal.toughness === -99) {
-        return 25;
+        return 28;
     }
-    return 5 * ((removal.ccm - removal.toughness) / 2 - removal.cardDraw);
+    return 6 * ((removal.ccm - removal.toughness) / 2 - removal.cardDraw);
 }
 
+/**
+ * returns true if crea1 can kill crea2
+ * @param crea1
+ * @param crea2
+ * @returns {boolean}
+ */
 function canKill(crea1, crea2){
     return !crea2.abilities.includes('W') && (crea1.abilities.includes('L') || crea1.power >= crea2.toughness);
 }
@@ -502,8 +508,18 @@ function getTarget(crea, availableCreas, oppCreatures, player, opponent) {
         debug('no creature on board');
         return null;
     } else if (oppCreaWithGard.length > 0) {
-        target = oppCreaWithGard[0];
-        debug('target is the best guard creature');
+        const oppCreaWithLethalGuard = oppCreaWithGard.filter(oppCrea => oppCrea.abilities.includes('L'));
+        const oppCreaWithLethalGuardICanKill = oppCreaWithLethalGuard.filter(oppCrea => canKill(crea, oppCrea));
+        if (crea.abilities.includes('W') && oppCreaWithLethalGuardICanKill.length > 0){
+            target = oppCreaWithLethalGuardICanKill[0];
+            debug('target is the best lethal guard creature I can kill (I have ward)');
+        } else {
+            target = oppCreaWithGard[0];
+            const oppDanger = getDangerosity(target);
+            const myDanger = getDangerosity(crea);
+            printObj('me / him', [myDanger, oppDanger]);
+            debug('target is the best guard creature');
+        }
     } else if (opponent.health <= totalDamage) {
         debug('we have lethal here');
         return null;
@@ -559,6 +575,7 @@ function main(hand, creatures, oppCreatures, player) {
     let playableCards = getPlayable(hand, player);
     debug(`${player.mana} mana available`);
     debug(`${playableCards.length} cards playable`);
+
 
     while (playableCards.length > 0) {
         const combinations = getCombinations(playableCards);

@@ -2,6 +2,8 @@
 
 ## TODO
 
+- [x] encourage ward creatures to kill lethal guards (when several guards)
+- [x] encourage creatures to kill guards (when several guards)
 - [ ] find all possible attacks and their outcomes and decide the best set of attacks
 - [ ] improve dangerosity for creatures
 - [x] prioritize the combinations of cards
