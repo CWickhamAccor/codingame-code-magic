@@ -608,6 +608,7 @@ function handlePumpSpell(card, hand, player, worstCreature, bestCreature, oppCre
             splice(hand, card.id);
         } else if(worstCreature.power >= 4 && !card.abilities.includes('G')) {
             debug(`don't put lethal pumpspells that don't give guard on 4+ power creatures`);
+            splice(hand, card.id);
         } else {
             debug('giving lethal to the worst creature');
             player.mana -= card.ccm;
