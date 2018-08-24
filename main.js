@@ -221,7 +221,7 @@ function getDangerosity(crea) {
         danger += 5 * crea.abilities.includes('W');
         danger += 3 * crea.abilities.includes('G');
     } else {
-        danger += crea.power * crea.toughness / 4;
+        danger += Math.sqrt(crea.power) * Math.sqrt(crea.toughness) / 4;
         danger += 1.5 * crea.power * (1.5 + crea.abilities.includes('W'));
         danger += 1.5 * crea.toughness * (1.5 + crea.abilities.includes('G'));
     }
@@ -599,8 +599,8 @@ function main(hand, creatures, oppCreatures, player) {
             setScores.push({i, score});
         });
         setScores.sort((s1, s2) => s2.score - s1.score);
-        printObj('set scores', setScores);
-        printObj('sets', readableSets);
+        // printObj('set scores', setScores);
+        // printObj('sets', readableSets);
         const bestSetId = setScores[0].i;
         const bestCombination = playableSets[bestSetId];
         printObj('Best set', readableSets[bestSetId]);
@@ -660,8 +660,8 @@ function handlePumpSpell(card, hand, player, worstCreature, bestCreature, oppCre
         } else if(worstCreature.power + card.power === 0) {
             debug(`don't put lethal pumpspells on 0 power creatures`);
             splice(hand, card.id);
-        } else if(worstCreature.power >= 4 && !card.abilities.includes('G')) {
-            debug(`don't put lethal pumpspells that don't give guard on 4+ power creatures`);
+        } else if(worstCreature.power >= 4 && !card.abilities.includes('W')) {
+            debug(`don't put lethal pumpspells that don't give ward on 4+ power creatures`);
             splice(hand, card.id);
         } else {
             debug('giving lethal to the worst creature');
@@ -693,12 +693,6 @@ function handlePumpSpell(card, hand, player, worstCreature, bestCreature, oppCre
 
 function handleRemoval(card, oppCreatures, hand, player){
     let played = false;
-    oppCreatures.forEach(target => {
-        const danger = getDangerosity(target);
-        const value = getValue(card);
-        debug(`danger = ${danger}`);
-        debug(`value = ${value}`);
-    });
 
     oppCreatures.sort((crea1, crea2) => getDangerosity(crea2) - getDangerosity(crea1));
 
