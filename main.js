@@ -193,7 +193,7 @@ function getCards() {
 
 function getCardsFrom(cards, mode){
     switch (mode){
-        case 'board':
+        case 'game':
             return cards.filter(card => card.location === 1);
         case 'oppBoard':
             return cards.filter(card => card.location === -1);
@@ -209,9 +209,12 @@ function getDangerosity(crea) {
     // in case of pump spell
     if (crea.type === 1){
         const pump = {...crea};
+        pump.power += pump.power > 0 ? 0 : 1;
         pump.toughness += 1;
         pump.type = 0;
-        pump.abilities.push('C');
+        if (!pump.abilities.includes('C')){
+            pump.abilities.push('C');
+        }
         return getDangerosity(pump);
     }
     let danger = 0;
@@ -630,6 +633,7 @@ function main(hand, creatures, oppCreatures, player) {
         //handle creatures
         if (card.type === 0) {
             player.mana -= card.ccm;
+            creatures.push(card);
             playCreature(card);
         }
         //handle pump spells
