@@ -1,5 +1,6 @@
 function copy(obj) {
-    return Object.assign({}, obj);
+    // return Object.assign({}, obj);
+    return JSON.parse(JSON.stringify(obj));
 }
 
 function canKill(crea1, crea2) {
@@ -13,8 +14,16 @@ function splice(cards, id) {
     cards.splice(index, 1);
 }
 
+function getCard(game, id) {
+    const { hand, myBoard, oppBoard } = game;
+    const [handArr, myBoardArr, oppBoardArr] = Object.values({ hand, myBoard, oppBoard });
+    const cards = [...handArr, ...myBoardArr, ...oppBoardArr];
+    return cards.find(card => card.id === id);
+}
+
 module.exports = {
     copy,
     canKill,
     splice,
+    getCard,
 };

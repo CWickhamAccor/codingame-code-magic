@@ -1,4 +1,4 @@
-const { getPossibleActions, getPossibleAttacks, getPossiblePlays } = require('../src/mcts/gameState')
+const { getPossibleActions, getPossibleAttacks, getPossiblePlays } = require('../../src/mcts/gameState')
 
 describe('getPossiblePlays', () => {
     it('testing getPossibleAttacks', () => {
@@ -58,26 +58,10 @@ describe('getPossiblePlays', () => {
         const [crea5, crea6] = oppBoard;
         const attacks = getPossibleAttacks({ myBoard, oppBoard });
         expect(attacks).toEqual([
-            {
-                type: 'attack',
-                source: crea1,
-                target: crea5,
-            },
-            {
-                type: 'attack',
-                source: crea1,
-                target: crea6,
-            },
-            {
-                type: 'attack',
-                source: crea2,
-                target: crea5,
-            },
-            {
-                type: 'attack',
-                source: crea2,
-                target: crea6,
-            },
+            { type: 'attack', source: crea1.id, target: crea5.id },
+            { type: 'attack', source: crea1.id, target: crea6.id },
+            { type: 'attack', source: crea2.id, target: crea5.id },
+            { type: 'attack', source: crea2.id, target: crea6.id },
         ]);
     });
 
@@ -111,14 +95,8 @@ describe('getPossiblePlays', () => {
         const [crea1, crea2, crea3] = hand;
         const plays = getPossiblePlays({ player, hand });
         expect(plays).toEqual([
-            {
-                type: 'play',
-                source: crea1,
-            },
-            {
-                type: 'play',
-                source: crea2,
-            },
+            { type: 'play', source: crea1.id },
+            { type: 'play', source: crea2.id },
         ]);
     });
 
@@ -209,34 +187,12 @@ describe('getPossiblePlays', () => {
         const actions = getPossibleActions(gameState);
 
         expect(actions).toEqual([
-            {
-                type: 'play',
-                source: crea7,
-            },
-            {
-                type: 'play',
-                source: crea8,
-            },
-            {
-                type: 'attack',
-                source: crea1,
-                target: crea5,
-            },
-            {
-                type: 'attack',
-                source: crea1,
-                target: crea6,
-            },
-            {
-                type: 'attack',
-                source: crea2,
-                target: crea5,
-            },
-            {
-                type: 'attack',
-                source: crea2,
-                target: crea6,
-            },
+            { type: 'play', source: crea7.id },
+            { type: 'play', source: crea8.id },
+            { type: 'attack', source: crea1.id, target: crea5.id },
+            { type: 'attack', source: crea1.id, target: crea6.id },
+            { type: 'attack', source: crea2.id, target: crea5.id },
+            { type: 'attack', source: crea2.id, target: crea6.id },
         ]);
     });
 

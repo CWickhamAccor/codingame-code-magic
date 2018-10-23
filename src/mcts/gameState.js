@@ -1,8 +1,8 @@
-const { canKill, splice, copy } = require('../utils/tools');
+const { canKill, splice, copy, getCard } = require('../utils/tools');
 
 function attack(board, source, target) {
     if (canKill(source, target)) {
-        splice(board, target);
+        splice(board, target.id);
     } else {
         target.toughness -= source.power;
     }
@@ -24,13 +24,15 @@ function playCreature(game, source) {
 
 function getUpdatedGameState(game, { type, source, target }) {
     const newGame = copy(game);
+    const sourceObj = getCard(newGame, source);
+    const targetObj = getCard(newGame, target);
     switch (type) {
         case 'attack':
-            combat(newGame, source, target);
+            combat(newGame, sourceObj, targetObj);
             break;
         case 'play':
-            if (source.type === 'creature') {
-                playCreature(newGame, source);
+            if (sourceObj.type === 'creature') {
+                playCreature(newGame, sourceObj);
             }
             break;
         default:
@@ -45,7 +47,7 @@ function getPossiblePlays(game) {
     return hand.filter(card => card.ccm <= player.mana)
         .map(card => ({
             type: 'play',
-            source: card,
+            source: card.id,
         }));
 }
 
@@ -57,8 +59,8 @@ function getPossibleAttacks(game) {
             oppBoard.forEach((opp) => {
                 attacks.push({
                     type: 'attack',
-                    source: crea,
-                    target: opp,
+                    source: crea.id,
+                    target: opp.id,
                 });
             });
         });
@@ -72,23 +74,40 @@ function getPossibleActions(game) {
     return actions;
 }
 
-function getPossibleSetsOfActions(game, set = [[]]) {
+function getPossibleSetsOfActions(game, set = [], actual = []) {
+    set.push(actual);
     const actions = getPossibleActions(game);
-    set.push(actions);
-    if (actions === []) {
-        return set;
+    if (actions.length === 0) {
+        return;
     }
+
     actions.forEach((action) => {
+        const newActual = copy(actual);
+        newActual.push(action);
         const newGameState = getUpdatedGameState(game, action);
-        set.push([action, ...getPossibleActions(newGameState)]);
+        getPossibleSetsOfActions(newGameState, set, newActual);
     });
-    return set;
 }
+
+// function getPossibleSetsOfActions(game, set = [[]]) {
+//     const actions = getPossibleActions(game);
+//     if (actions.length === 0) {
+//         return set;
+//     }
+//     // actions.push({ type: null });
+//
+//     actions.forEach((action) => {
+//         const newGameState = getUpdatedGameState(game, action);
+//         set.push([action]);
+//         set.push([action, ...getPossibleSetsOfActions(newGameState)]);
+//     });
+//     set.push(actions);
+//     return set;
+// }
+
 
 module.exports = {
     attack,
-    combat,
-    playCreature,
     getUpdatedGameState,
     getPossibleAttacks,
     getPossiblePlays,

@@ -1,5 +1,5 @@
 /* eslint-disable object-curly-newline */
-const { player, hand, myBoard, oppBoard } = require('../../tests/samples');
+const { player, hand, myBoard, oppBoard } = require('../samples');
 const { getPossibleActions, getUpdatedGameState } = require('./gameState');
 
 const game = {
