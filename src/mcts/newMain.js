@@ -8,6 +8,7 @@ const memoHelper = {
     },
     gameState: new Map(),
 };
+let timer;
 
 /** ************************************************* */
 /**                tools functions                    */
@@ -102,6 +103,10 @@ function getCardsFrom(cards, mode) {
     }
 }
 
+function timeout() {
+    return performance.now() - timer > 100;
+}
+
 function printObj(key, object) {
     printErr(`${key} : ${JSON.stringify(object, null, 2)}`);
 }
@@ -160,7 +165,7 @@ function getScore({
     score += hand.reduce((acc, card) => acc + onBoardCreatureScore(card), 0) / 4;
     score += myBoard.reduce((acc, card) => acc + onBoardCreatureScore(card), 0);
     score -= oppBoard.reduce((acc, card) => acc + onBoardCreatureScore(card), 0);
-    score += (30 - opponent.health) * 4;
+    score += (30 - opponent.health) * 2;
     return score;
 }
 
@@ -292,11 +297,11 @@ function getPossibleAttacks(game) {
                     target: opp.id,
                 });
             });
-            // attacks.push({
-            //     type: 'attack',
-            //     source: crea.id,
-            //     target: -1,
-            // });
+            attacks.push({
+                type: 'attack',
+                source: crea.id,
+                target: -1,
+            });
         });
     return attacks;
 }
@@ -326,6 +331,10 @@ function getPossibleActions(game) {
 
 function getSetOfPossibleActions(game, set = [], actual = []) {
     set.push(actual);
+    if (timeout()) {
+        debug('timeout, breaking the loop');
+        return;
+    }
     const actions = getPossibleActions(game);
     // printObj('actions', actions);
     if (actions.length === 0) {
@@ -352,7 +361,7 @@ function getSetOfPossibleActions(game, set = [], actual = []) {
 /** ************************************************* */
 
 function play(gameState) {
-    printObj('gameState', gameState);
+    // printObj('gameState', gameState);
     const set = [];
     const t0 = performance.now();
     getSetOfPossibleActions(gameState, set);
@@ -432,6 +441,7 @@ while (true) {
     };
     bestTurn.actions = [];
     bestTurn.score = -Infinity;
+    timer = performance.now();
     think(gameState, cards);
     act();
 }
