@@ -401,9 +401,10 @@ function getUpdatedGameState(game, { type, source, target }) {
 /** **** **** Plays */
 
 function getPossiblePlays(game) {
-    const { hand, player } = game;
+    const { hand, player, myBoard } = game;
     // @TODO find all possible targets for spells
-    return hand.filter(card => card.ccm <= player.mana)
+    if (myBoard.length === 6) { return []; }
+    return hand.filter(card => card.ccm <= player.mana && card.type === 'creature')
         .map(card => ({
             type: 'play',
             source: card.id,
