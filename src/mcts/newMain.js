@@ -126,21 +126,21 @@ const scale = {
     114: 2,
     115: 2.5,
     116: 3,
-    // 120: 3,
-    // 122: 2.5,
-    // 123: 2.5,
-    // 129: 3.5,
-    // 133: 2.5,
-    // 135: 3.5,
-    // 139: 5,
-    // 141: 2.5,
-    // 144: 4,
-    // 150: 4,
-    // 151: 5,
-    // 152: 3.5,
-    // 155: 3.5,
-    // 158: 5,
-    // 159: 2,
+    120: 3,
+    122: 2.5,
+    123: 2.5,
+    129: 3.5,
+    133: 2.5,
+    135: 3.5,
+    139: 5,
+    141: 2.5,
+    144: 4,
+    150: 4,
+    151: 5,
+    152: 3.5,
+    155: 3.5,
+    158: 5,
+    159: 2,
 };
 
 /** ************************************************* */
@@ -272,7 +272,7 @@ function getCard(game, id) {
 /** ************************************************* */
 
 function onBoardCreatureScore(crea) {
-    let score = 0;
+    let score = 10;
     if (crea.lethal) {
         score += 8 + crea.power / 2;
         score += 4 * crea.toughness;
@@ -295,7 +295,7 @@ function getScore({
     let score = 0;
     // if (opponent.health <= 0) { return Infinity; }
     // if (player.health <= 0) { return -Infinity; }
-    score += hand.reduce((acc, card) => acc + onBoardCreatureScore(card), 0) / 4;
+    // score += hand.reduce((acc, card) => acc + onBoardCreatureScore(card), 0) / 4;
     score += myBoard.reduce((acc, card) => acc + onBoardCreatureScore(card), 0);
     score -= oppBoard.reduce((acc, card) => acc + onBoardCreatureScore(card), 0);
     score += (30 - opponent.health) * 0.8;
@@ -316,9 +316,10 @@ function pass() {
 }
 
 function performActions() {
-    turnActions.push(...bestTurn.actions.map(action => {
+    turnActions.push(...bestTurn.actions.map((action) => {
         let string = '';
-        if (action.type === 'play') { string += `SUMMON ${action.source}`; }
+        if (action.type === 'summon') {string += `SUMMON ${action.source}`; }
+        if (action.type === 'use') {string += `USE ${action.source} ${action.target}`; }
         if (action.type === 'attack') { string += `ATTACK ${action.source} ${action.target}`; }
         return string;
     }));
@@ -332,6 +333,36 @@ function act() {
 /** ************************************************* */
 /**                 MCTS functions                    */
 /** ************************************************* */
+
+/** **** **** Play creature */
+
+function useItem(game, source, target) {
+    game.player.mana -= source.ccm;
+    target.power += source.power;
+    target.toughness += source.toughness;
+    ['charge', 'breakthrough', 'drain', 'lethal', 'guard', 'ward'].forEach((ability) => {
+        target[ability] = source[ability] ? source.type === 'greenItem' : target[ability];
+    });
+    if (['redItem', 'blueItem'].includes(source.type)){
+        if (target.ward) {
+            // cancel damage
+            target.ward = false;
+            target.toughness -= source.toughness;
+        }
+        if (target.toughness <= 0) {
+            splice(game.oppBoard, target.id);
+        }
+    }
+    // target.charge = source.charge ? source.type === 'greenItem' : target.charge;
+    // target.charge = source.charge ? source.type === 'greenItem' : target.charge;
+    // if (source.charge) { target.charge = source.type === 'greenItem'; }
+    // if (source.breakthrough) { target.breakthrough = source.type === 'greenItem'; }
+    // if (source.drain) { target.drain = source.type === 'greenItem'; }
+    // if (source.lethal) { target.lethal = source.type === 'greenItem'; }
+    // if (source.guard) { target.guard = source.type === 'greenItem'; }
+    // if (source.ward) { target.ward = source.type === 'greenItem'; }
+    splice(game.hand, source.id);
+}
 
 /** **** **** Play creature */
 
@@ -384,12 +415,11 @@ function getUpdatedGameState(game, { type, source, target }) {
         case 'attack':
             combat(newGame, sourceObj, targetObj);
             break;
-        case 'play':
-            if (sourceObj.type === 'creature') {
-                playCreature(newGame, sourceObj);
-            } else {
-                debug('trying to play a noncreature spell !');
-            }
+        case 'summon':
+            playCreature(newGame, sourceObj);
+            break;
+        case 'use':
+            useItem(newGame, sourceObj, targetObj);
             break;
         default:
             break;
@@ -401,14 +431,34 @@ function getUpdatedGameState(game, { type, source, target }) {
 /** **** **** Plays */
 
 function getPossiblePlays(game) {
-    const { hand, player, myBoard } = game;
+    const { hand, player, myBoard, oppBoard } = game;
     // @TODO find all possible targets for spells
     if (myBoard.length === 6) { return []; }
-    return hand.filter(card => card.ccm <= player.mana && card.type === 'creature')
-        .map(card => ({
-            type: 'play',
-            source: card.id,
-        }));
+    const castableCards = hand.filter(card => card.ccm <= player.mana);
+    const plays = [];
+    castableCards.forEach((card) => {
+        if (card.type === 'creature') {
+            plays.push({
+                type: 'summon',
+                source: card.id,
+            });
+        }
+        if (card.type === 'greenItem') {
+            myBoard.forEach(crea => plays.push({
+                type: 'use',
+                source: card.id,
+                target: crea.id,
+            }));
+        }
+        if (card.type === 'redItem' || card.type === 'blueItem') {
+            oppBoard.forEach(crea => plays.push({
+                type: 'use',
+                source: card.id,
+                target: crea.id,
+            }));
+        }
+    });
+    return plays;
 }
 
 /** **** **** Attacks */
@@ -515,7 +565,7 @@ function play(gameState) {
     const t0 = performance.now();
     getSetOfPossibleActions(gameState, set);
     const t1 = performance.now();
-    // debug(`possibleSets : ${Math.round((t1 - t0))} milliseconds.`);
+    debug(`possibleSets : ${Math.round((t1 - t0))} milliseconds.`);
     // printObj('Actions', set);
     debug(`chosen between ${set.length} turns`);
     printObj('bestTurn', bestTurn);
