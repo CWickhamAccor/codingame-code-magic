@@ -160,7 +160,7 @@ function getPlayers() {
     for (let i = 0; i < 2; i++) {
         const inputs = readline().split(' ');
         const player = {};
-        ['health', 'mana', 'deck'/*, 'rune'*/].forEach((key, index) => {
+        ['health', 'mana', 'deck', 'rune', 'draw'].forEach((key, index) => {
             player[key] = parseInt(inputs[index]);
         });
         players.push(player);
@@ -277,7 +277,7 @@ function printObj(key, object) {
 }
 
 /****************************************************/
-/*                  actions                         */
+/*                  turnActions                         */
 /****************************************************/
 
 function playRemoval(card, target, cards, oppCreatures) {
@@ -498,17 +498,17 @@ function getTarget(crea, availableCreas, oppCreatures, player, opponent) {
 
     let target = null;
 
-    // check if we have or oppo has lethal on board
+    // check if we have or oppo has lethal on myBoard
     const [totalDamage, oppDamage] = [availableCreas, oppCreatures].map(arr => arr.map(a => a.power).reduce((a, b) => a + b, 0));
     debug(`totalDamage : ${totalDamage}`);
     debug(`oppDamage : ${oppDamage}`);
 
     if (oppDamage > player.health){
-        debug('opponent has lethal on board');
+        debug('opponent has lethal on myBoard');
     }
 
     if (oppCreatures.length === 0){
-        debug('no creature on board');
+        debug('no creature on myBoard');
         return null;
     } else if (oppCreaWithGard.length > 0) {
         const oppCreaWithLethalGuard = oppCreaWithGard.filter(oppCrea => oppCrea.abilities.includes('L'));
@@ -770,19 +770,19 @@ function game(player, opponent, cards, opponentHand) {
     let board = getCardsFrom(cards, 'board');
 
     debug('main 1');
-    main(hand, board, oppBoard, player);
+    main(hand, myBoard, oppBoard, player);
 
     board = getCardsFrom(cards, 'board');
 
     debug('combat');
-    combat(board, oppBoard, player, opponent);
+    combat(myBoard, oppBoard, player, opponent);
 
     board = getCardsFrom(cards, 'board');
     oppBoard = getCardsFrom(cards, 'oppBoard');
     hand = getCardsFrom(cards, 'hand');
 
     debug('main 2');
-    main(hand, board, oppBoard, player);
+    main(hand, myBoard, oppBoard, player);
 
     debug('end of turn');
     pass();

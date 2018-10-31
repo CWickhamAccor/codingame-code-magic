@@ -1,17 +1,27 @@
-const { canKill, splice, copy, getCard } = require('../utils/tools');
+const {
+    canKill, splice, copy, getCard,
+} = require('../utils/tools');
 
-function attack(board, source, target) {
+function attack(myBoard, source, target) {
     if (canKill(source, target)) {
-        splice(board, target.id);
+        splice(myBoard, target.id);
     } else {
         target.toughness -= source.power;
     }
 }
 
+function attackFace(game, source) {
+    game.opponent.health -= source.power;
+}
+
 function combat(game, source, target) {
     source.attacked = true;
-    attack(game.oppBoard, source, target);
-    attack(game.myBoard, target, source);
+    if (!target || target === null) {
+        attackFace(game, source);
+    } else {
+        attack(game.oppBoard, source, target);
+        attack(game.myBoard, target, source);
+    }
 }
 
 function playCreature(game, source) {
@@ -33,6 +43,8 @@ function getUpdatedGameState(game, { type, source, target }) {
         case 'play':
             if (sourceObj.type === 'creature') {
                 playCreature(newGame, sourceObj);
+            } else {
+                debug('trying to play a noncreature spell !');
             }
             break;
         default:
@@ -54,6 +66,7 @@ function getPossiblePlays(game) {
 function getPossibleAttacks(game) {
     const { myBoard, oppBoard } = game;
     const attacks = [];
+    // @TODO add face attacks
     myBoard.filter(crea => !crea.sick && !crea.attacked)
         .forEach((crea) => {
             oppBoard.forEach((opp) => {
@@ -74,10 +87,24 @@ function getPossibleActions(game) {
     return actions;
 }
 
-function getPossibleSetsOfActions(game, set = [], actual = []) {
+function getScore({
+    player, opponent, hand, myBoard, oppBoard,
+}) {
+    if (opponent.health <= 0) {
+        return Infinity;
+    }
+    const scoreHand = hand.length;
+    const scoreBoard = myBoard.length + myBoard.reduce((crea, acc) => acc + crea.power, 0);
+    const scoreOppBoard = oppBoard.length + oppBoard.reduce((crea, acc) => acc + crea.power, 0);
+    const scoreOppHealth = (30 - opponent.health) / 10;
+    return scoreHand + scoreBoard + scoreOppBoard + scoreOppHealth;
+}
+
+function getSetOfPossibleActions(game, set = [], actual = []) {
     set.push(actual);
     const actions = getPossibleActions(game);
     if (actions.length === 0) {
+        // const score = getScore(game);
         return;
     }
 
@@ -85,25 +112,9 @@ function getPossibleSetsOfActions(game, set = [], actual = []) {
         const newActual = copy(actual);
         newActual.push(action);
         const newGameState = getUpdatedGameState(game, action);
-        getPossibleSetsOfActions(newGameState, set, newActual);
+        getSetOfPossibleActions(newGameState, set, newActual);
     });
 }
-
-// function getPossibleSetsOfActions(game, set = [[]]) {
-//     const actions = getPossibleActions(game);
-//     if (actions.length === 0) {
-//         return set;
-//     }
-//     // actions.push({ type: null });
-//
-//     actions.forEach((action) => {
-//         const newGameState = getUpdatedGameState(game, action);
-//         set.push([action]);
-//         set.push([action, ...getPossibleSetsOfActions(newGameState)]);
-//     });
-//     set.push(actions);
-//     return set;
-// }
 
 
 module.exports = {
@@ -112,5 +123,5 @@ module.exports = {
     getPossibleAttacks,
     getPossiblePlays,
     getPossibleActions,
-    getPossibleSetsOfActions,
+    getSetOfPossibleActions,
 };

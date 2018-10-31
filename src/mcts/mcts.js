@@ -28,7 +28,7 @@ console.log(' \x1b[36m--------\n state : initial\n --------\x1b[0m');
 console.log(JSON.stringify(game, null, 2));
 
 possibleActions.forEach((action, i) => {
-// actions.forEach((action, i) => {
+// turnActions.forEach((action, i) => {
     const newGame = getUpdatedGameState(game, action);
     console.log(` \x1b[36m--------\n state : ${i}\n --------\x1b[0m`);
     console.log(JSON.stringify(game, null, 2));
