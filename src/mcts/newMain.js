@@ -9,6 +9,139 @@ const memoHelper = {
     gameState: new Map(),
 };
 let timer;
+const scale = {
+    1: 2,
+    2: 0.75,
+    3: 2.5,
+    4: 0,
+    5: 2.5,
+    6: 2,
+    7: 2,
+    8: 2,
+    9: 3,
+    10: 0.75,
+    11: 1.5,
+    12: 2,
+    13: 2.5,
+    14: 0,
+    15: 2,
+    16: 0.75,
+    17: 2,
+    18: 2.5,
+    19: 2.5,
+    20: 0.5,
+    21: 2,
+    22: 1.5,
+    23: 2.5,
+    24: 0.5,
+    25: 0.75,
+    26: 2.5,
+    27: 2,
+    28: 2.5,
+    29: 3,
+    30: 3,
+    31: 0.5,
+    32: 3.5,
+    33: 3,
+    34: 2.5,
+    35: 2,
+    36: 4,
+    37: 3.5,
+    38: 2.5,
+    39: 2.5,
+    40: 3,
+    41: 2.5,
+    42: 2,
+    43: 3,
+    44: 5,
+    45: 4,
+    46: 2.5,
+    47: 2.5,
+    48: 3,
+    49: 4.5,
+    50: 3,
+    51: 3.5,
+    52: 4,
+    53: 4.5,
+    54: 3.5,
+    55: 2.5,
+    56: 2,
+    57: 0.75,
+    58: 2,
+    59: 1.5,
+    60: 0.75,
+    61: 2,
+    62: 2.5,
+    63: 2.5,
+    64: 3,
+    65: 3,
+    66: 2,
+    67: 3.5,
+    68: 3,
+    69: 4.5,
+    70: 2.5,
+    71: 1.5,
+    72: 2,
+    73: 3,
+    74: 3,
+    75: 2,
+    76: 3,
+    77: 0.75,
+    78: 0.5,
+    79: 0.75,
+    80: 4.5,
+    81: 2,
+    82: 2.5,
+    83: 0,
+    84: 3,
+    85: 2.5,
+    86: 2,
+    87: 2.5,
+    88: 2,
+    89: 2,
+    90: 0.75,
+    91: 2,
+    92: 0.5,
+    93: 2.5,
+    94: 2.5,
+    95: 3,
+    96: 2.5,
+    97: 2.5,
+    98: 2.5,
+    99: 3,
+    100: 2,
+    101: 3,
+    102: 2,
+    103: 3.5,
+    104: 2.5,
+    105: 3,
+    106: 2.5,
+    107: 2,
+    108: 1,
+    109: 1.5,
+    110: 0.75,
+    111: 3,
+    112: 2,
+    113: 0.5,
+    114: 2,
+    115: 2.5,
+    116: 3,
+    // 120: 3,
+    // 122: 2.5,
+    // 123: 2.5,
+    // 129: 3.5,
+    // 133: 2.5,
+    // 135: 3.5,
+    // 139: 5,
+    // 141: 2.5,
+    // 144: 4,
+    // 150: 4,
+    // 151: 5,
+    // 152: 3.5,
+    // 155: 3.5,
+    // 158: 5,
+    // 159: 2,
+};
 
 /** ************************************************* */
 /**                tools functions                    */
@@ -165,7 +298,7 @@ function getScore({
     score += hand.reduce((acc, card) => acc + onBoardCreatureScore(card), 0) / 4;
     score += myBoard.reduce((acc, card) => acc + onBoardCreatureScore(card), 0);
     score -= oppBoard.reduce((acc, card) => acc + onBoardCreatureScore(card), 0);
-    score += (30 - opponent.health) * 2;
+    score += (30 - opponent.health) * 0.8;
     return score;
 }
 
@@ -288,20 +421,31 @@ function getPossibleAttacks(game) {
     }
     const attacks = [];
     // @TODO add face attacks
+    const oppGuards = oppBoard.filter(crea => crea.guard);
     myBoard.filter(crea => !crea.sick && !crea.attacked)
         .forEach((crea) => {
-            oppBoard.forEach((opp) => {
+            if (oppGuards.length > 0) {
+                oppGuards.forEach((opp) => {
+                    attacks.push({
+                        type: 'attack',
+                        source: crea.id,
+                        target: opp.id,
+                    });
+                });
+            } else {
+                oppBoard.forEach((opp) => {
+                    attacks.push({
+                        type: 'attack',
+                        source: crea.id,
+                        target: opp.id,
+                    });
+                });
                 attacks.push({
                     type: 'attack',
                     source: crea.id,
-                    target: opp.id,
+                    target: -1,
                 });
-            });
-            attacks.push({
-                type: 'attack',
-                source: crea.id,
-                target: -1,
-            });
+            }
         });
     return attacks;
 }
@@ -344,6 +488,10 @@ function getSetOfPossibleActions(game, set = [], actual = []) {
     }
 
     actions.forEach((action) => {
+        if (timeout()) {
+            debug('timeout, breaking the loop');
+            return;
+        }
         const newActual = copy(actual);
         const newGameState = getUpdatedGameState(game, action);
         const newScore = getScore(newGameState);
@@ -368,6 +516,7 @@ function play(gameState) {
     const t1 = performance.now();
     // debug(`possibleSets : ${Math.round((t1 - t0))} milliseconds.`);
     // printObj('Actions', set);
+    debug(`chosen between ${set.length} turns`);
     printObj('bestTurn', bestTurn);
     performActions();
     pass();
@@ -383,16 +532,16 @@ function draft({ player }, cards) {
     printObj('cards', cards);
     cards.forEach((card, index) => { card.draftId = index; });
 
-    // cards.forEach((card) => {
-    //     if (!Object.keys(scale).includes(card.number.toString())) {
-    //         debug(`card ${card.number} not in the scale`);
-    //         card.score = -1;
-    //     } else {
-    //         card.score = scale[card.number] + curve[card.ccm] * player.deck / 60;
-    //         debug('score : ', card.score);
-    //     }
-    // });
-    // cards.sort((card1, card2) => card2.score - card1.score);
+    cards.forEach((card) => {
+        if (!Object.keys(scale).includes(card.number.toString())) {
+            debug(`card ${card.number} not in the scale`);
+            card.score = -1;
+        } else {
+            card.score = scale[card.number]; // + curve[card.ccm] * player.deck / 60;
+            debug('score : ', card.score);
+        }
+    });
+    cards.sort((card1, card2) => card2.score - card1.score);
     // curve[cards[0].ccm]--;
 
     pick(cards[0].draftId);
